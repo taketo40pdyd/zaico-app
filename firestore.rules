@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function verified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function me() {
+      return request.auth.token.email.lower();
+    }
+    match /shared/zaiko {
+      allow read: if verified() && (resource == null || me() in resource.data.allowed);
+      allow create: if verified() && me() in request.resource.data.allowed;
+      allow update: if verified() && me() in resource.data.allowed && me() in request.resource.data.allowed;
+    }
+  }
+}
